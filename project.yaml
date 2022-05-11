@@ -2,7 +2,7 @@ specVersion: 0.2.0
 name: astar
 version: 0.0.4
 description: This SubQuery project can be use as a starting point for Astar network
-repository: https://github.com/dappsDAO/dapps-protocol/tree/main/packages/subql-astar
+repository: https://github.com/AstarStats/astarsts-dappstaking-data
 schema:
   file: ./schema.graphql
 network:
