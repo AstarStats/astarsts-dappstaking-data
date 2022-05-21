@@ -65,7 +65,7 @@ export async function handleDAppStakingReward(event: SubstrateEvent): Promise<vo
   entity.accountId = accountId
   entity.contractId = contractId
   entity.contractType = ContractType[contractType.toUpperCase()]
-  entity.reward = balance
+  entity.amount = balance
   entity.eraIndex = (era as u32).toNumber()
   entity.timestamp = event.block.timestamp
   await entity.save()
