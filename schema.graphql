@@ -12,7 +12,7 @@ type DAppStakingReward @entity {
   account: Account!
   contract: Contract!
   contractType: ContractType!
-  reward: Float! #BalanceOf
+  amount: Float! #BalanceOf
   eraIndex: Int!
   timestamp: Date!
 }
