@@ -1,5 +1,5 @@
 import { SubstrateEvent } from "@subql/types";
-import { Contract, DappStakingReward, Account, ContractType, AllClaimedReward, UnbondAndUnstake, BondAndStake } from "../types";
+import { Contract, DappStakingReward, Account, ContractType, UnbondAndUnstake, BondAndStake } from "../types";
 import { Balance } from "@polkadot/types/interfaces";
 import { u32 } from "@polkadot/types";
 
@@ -10,7 +10,7 @@ export async function handleBondAndStake(event: SubstrateEvent): Promise<void> {
     },
   } = event;
   const accountId = account.toString();
-  const balance = correctBalance((balanceOf as Balance).toBigInt());
+  const balance = Number(balanceOf as Balance);
   const smartContractObj = JSON.parse(smartContract.toString());
   const contractType = smartContractObj.hasOwnProperty("wasm") ? "wasm" : "evm";
   const contractId = smartContractObj[contractType];
@@ -20,7 +20,7 @@ export async function handleBondAndStake(event: SubstrateEvent): Promise<void> {
   entity.accountId = accountId;
   entity.contractId = contractId;
   entity.contractType = ContractType[contractType.toUpperCase()];
-  entity.amount = balance;
+  entity.amount = balance.toString();
   entity.timestamp = event.block.timestamp;
   await entity.save();
 }
@@ -32,7 +32,7 @@ export async function handleUnbondAndUnstake(event: SubstrateEvent): Promise<voi
     },
   } = event;
   const accountId = account.toString();
-  const balance = correctBalance((balanceOf as Balance).toBigInt());
+  const balance = Number(balanceOf as Balance);
   const smartContractObj = JSON.parse(smartContract.toString());
   const contractType = smartContractObj.hasOwnProperty("wasm") ? "wasm" : "evm";
   const contractId = smartContractObj[contractType];
@@ -42,7 +42,7 @@ export async function handleUnbondAndUnstake(event: SubstrateEvent): Promise<voi
   entity.accountId = accountId;
   entity.contractId = contractId;
   entity.contractType = ContractType[contractType.toUpperCase()];
-  entity.amount = balance;
+  entity.amount = balance.toString();
   entity.timestamp = event.block.timestamp;
   await entity.save();
 }
@@ -53,73 +53,61 @@ export async function handleDappStakingReward(event: SubstrateEvent): Promise<vo
       data: [account, smartContract, era, balanceOf],
     },
   } = event;
-  const balance = correctBalance((balanceOf as Balance).toBigInt());
+
+  const balance = Number(balanceOf as Balance);
   const accountId = account.toString();
   const smartContractObj = JSON.parse(smartContract.toString());
   const contractType = smartContractObj.hasOwnProperty("wasm") ? "wasm" : "evm";
   const contractId = smartContractObj[contractType];
-  await ensureAccount(accountId, balance, 0);
-  await ensureContract(contractId, balance, 0);
-  await ensureAllClaimedReward(balance);
+  await ensureAccount(accountId, balance, Number(0));
+  await ensureContract(contractId, balance, Number(0));
   const entity = new DappStakingReward(`${event.block.block.header.number}-${event.idx.toString()}`);
   entity.accountId = accountId;
   entity.contractId = contractId;
   entity.contractType = ContractType[contractType.toUpperCase()];
-  entity.amount = balance;
+  entity.amount = balance.toString();
   entity.eraIndex = (era as u32).toNumber();
   entity.timestamp = event.block.timestamp;
   await entity.save();
 }
 
-async function ensureAccount(accountId: string, reward: number = 0, staking: number = 0): Promise<void> {
+async function ensureAccount(accountId: string, reward: number = Number(0), staking: number = Number(0)): Promise<void> {
   let account = await Account.get(accountId);
   if (!account) {
     account = new Account(accountId);
-    account.totalRewarded = 0;
-    account.totalStaking = 0;
+    account.totalRewarded = Number(0).toString();
+    account.totalStaking = Number(0).toString();
   }
-  account.totalRewarded += reward;
-  account.totalStaking += staking;
+  account.totalRewarded = (Number(account.totalRewarded) + Number(reward)).toString();
+  account.totalStaking = (Number(account.totalStaking) + Number(staking)).toString();
   await account.save();
 }
 
-async function ensureContract(contractId: string, balance: number = 0, staked: number = 0): Promise<void> {
+async function ensureContract(contractId: string, balance: Number = Number(0), staked: Number = Number(0)): Promise<void> {
   let contract = await Contract.get(contractId);
   if (!contract) {
     contract = new Contract(contractId);
-    contract.totalReward = 0;
-    contract.totalStaked = 0;
+    contract.totalReward = Number(0).toString();
+    contract.totalStaked = Number(0).toString();
   }
-  contract.totalReward += balance;
-  contract.totalStaked += staked;
+  contract.totalReward = (Number(contract.totalReward) + Number(balance)).toString();
+  contract.totalStaked = (Number(contract.totalStaked) + Number(staked)).toString();
   await contract.save();
 }
 
-async function ensureAllClaimedReward(balance: number): Promise<void> {
-  let allClaimedReward = await AllClaimedReward.get("1");
-  if (!allClaimedReward) {
-    allClaimedReward = new AllClaimedReward("1");
-    allClaimedReward.amount = 0;
-    allClaimedReward.count = BigInt(0);
-  }
-  allClaimedReward.amount += balance;
-  allClaimedReward.count++;
-  await allClaimedReward.save();
-}
+// function insertStr(str, index, insert) {
+//   return str.slice(0, index) + insert + str.slice(index, str.length);
+// }
 
-function insertStr(str, index, insert) {
-  return str.slice(0, index) + insert + str.slice(index, str.length);
-}
-
-function correctBalance(balanceOf: BigInt): number {
-  let balance = balanceOf.toString();
-  while (balance.length < 18) {
-    balance = "0" + balance;
-  }
-  if (balance.length > 18) {
-    balance = insertStr(balance, balance.length - 18, ".");
-  } else {
-    balance = "0." + balance;
-  }
-  return parseFloat(balance);
-}
+// function correctBalance(balanceOf: BigInt): number {
+//   let balance = balanceOf.toString();
+//   while (balance.length < 18) {
+//     balance = "0" + balance;
+//   }
+//   if (balance.length > 18) {
+//     balance = insertStr(balance, balance.length - 18, ".");
+//   } else {
+//     balance = "0." + balance;
+//   }
+//   return parseFloat(balance);
+// }

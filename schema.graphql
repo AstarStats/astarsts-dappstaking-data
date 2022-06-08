@@ -1,10 +1,13 @@
 type Contract @entity {
   id: ID! #SmartContractAddress
-  totalReward: Float!
-  totalStaked: Float!
+  totalReward: String!
+  # totalReward: Float!
+  totalStaked: String!
+  # totalStaked: Float!
   rewards: [DappStakingReward] @derivedFrom(field: "contract")
   stakes: [BondAndStake] @derivedFrom(field: "contract")
   unstakes: [UnbondAndUnstake] @derivedFrom(field: "contract")
+  # stakers: [Account] @derivedFrom(field: "contract")
 }
 
 type DappStakingReward @entity {
@@ -12,7 +15,7 @@ type DappStakingReward @entity {
   account: Account!
   contract: Contract!
   contractType: ContractType!
-  amount: Float! #BalanceOf
+  amount: String!
   eraIndex: Int!
   timestamp: Date!
 }
@@ -24,25 +27,26 @@ enum ContractType {
 
 type Account @entity {
   id: ID! #address
-  totalRewarded: Float!
-  totalStaking: Float!
+  totalRewarded: String!
+  totalStaking: String!
   rewards: [DappStakingReward] @derivedFrom(field: "account")
   stakes: [BondAndStake] @derivedFrom(field: "account")
   unstakes: [UnbondAndUnstake] @derivedFrom(field: "account")
+  # contracts: [Contract] @derivedFrom(field: "")
 }
 
-type AllClaimedReward @entity {
-  id: ID!
-  amount: Float!
-  count: BigInt!
-}
+# type AllClaimedReward @entity {
+#   id: ID!
+#   amount: String!
+#   count: BigInt!
+# }
 
 type BondAndStake @entity {
   id: ID! #blockHeight-eventIdx
   account: Account!
   contract: Contract!
   contractType: ContractType!
-  amount: Float! #BalanceOf
+  amount: String!
   timestamp: Date!
 }
 
@@ -51,6 +55,6 @@ type UnbondAndUnstake @entity {
   account: Account!
   contract: Contract!
   contractType: ContractType!
-  amount: Float! #BalanceOf
+  amount: String!
   timestamp: Date!
 }
